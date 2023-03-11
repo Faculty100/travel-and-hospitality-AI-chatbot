@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        *{
+            box-sizing: border-box;
+            list-style-type: none;
+            color: white;
+        }
+        li{
+            font-weight: lighter;
+        }
+        button, input{
+            color: black;
+        }
+        .container{
+            width: 50%;
+            margin: auto;
+            background-color: rgb(0, 5, 36);
+            min-height: 100vh;
+            padding: 1.5rem;
+        }
+        .message{
+            padding: 1rem;
+            
+        }
+        .user-message{
+            padding: 1rem 0 0.5rem 0;
+            text-align: right;
+            display: flex;
+            justify-content: flex-end;
+        }
+        .user-message li, .bot-message li{
+            border-radius: 10px;
+            padding: 9px;
+            max-width: 70%;
+            /* max-height: 130px;
+            overflow: hidden;
+            overflow-y: auto; */
+        }
+        *::-webkit-scrollbar{
+            display: none;
+        }
+        .user-message li{
+            border: 4px solid rgb(0, 110, 255);
+            background-color: rgba(0, 0, 255, 0.272);
+
+        }
+        .bot-message li{
+            border: 4px solid rgb(0, 255, 94);
+            background-color: rgba(0, 255, 128, 0.272);
+            word-wrap: break-word;
+
+        }
+        .bot-message{
+            padding: 1rem 0 0.5rem 0;
+            display: flex;
+            justify-content: flex-start;
+        }
+        #chatbox{
+            display: flex;
+            flex-direction: column;
+            min-height: 67vh;
+            overflow: hidden;
+            overflow-y: auto;
+        }
+        ul{
+            margin: 0;
+            padding: 0;
+        }
+        .inputText {
+            /* padding: 1rem; */
+            height: 30px;
+            background-color: white;
+            border-radius: 10px;
+            overflow: hidden;
+            width: 50%;
+            margin-top: 2rem;
+        }
+        .inputText input, .inputText button{
+            border: none;
+            outline: none;
+            background-color: transparent;
+            height: 100%;
+        }
+        .inputText input{
+            width: 100%;
+            padding-left: 0.5rem;
+        }
+        .inputText button{
+            background-color: rgb(0, 69, 188) !important;
+            color: white;
+            width: 120px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1> {{title}} </h1>
+        {% csrf_token %}
+
+        <ul id="chatbox">
+            <div class="message bot-message">
+                <li class="bot-first"></li>
+            </div>
+        </ul>
+
+
+        <div class="inputText" style="display: flex; flex-direction: row;">
+            <input id="user_msg" type="text"> 
+            <button id="send-btn" type="button">Send</button>
+        </div>
+    </div>
+    
+
+
+<script>
+    csrf_token = document.getElementsByName('csrfmiddlewaretoken')[0].value
+    let chatbox = document.querySelector("#chatbox");
+    let send_btn = document.querySelector("#send-btn");
+
+    let str = "AI Bot: Hello, welcome to the travel the hospitality website, I am your AI assitant :)"
+    str = str.split('')
+    let count = 0;
+    let firstLi = document.querySelector('.bot-first')
+    // document.querySelector('.inputText').style.opacity = '0.5';
+    // document.querySelector('.inputText').style.pointerEvents = 'none';
+    
+    const setFirst = setInterval(()=>{
+    function getChar(t){
+        if(t === " "){
+            return " "
+        }else{return t}
+    }
+    if(str[count] === " "){
+        firstLi.innerHTML = firstLi.innerHTML + " "
+    }
+    firstLi.innerHTML = firstLi.innerHTML + getChar(str[count])
+    if(count < str.length){
+        count = count + 1;
+    }
+    if(count === str.length){
+        clearInterval(setFirst)
+    }
+  }, 70)
+   send_btn.addEventListener("click", ()=>{
+         send_btn.innerHTML = 'Loading ...'
+
+        let send_input = document.querySelector("#user_msg").value;
+
+        // write user message
+    const newItem = document.createElement('div');
+    newItem.classList.add("message")
+    newItem.classList.add("user-message")
+  newItem.innerHTML = `<li> ${send_input}</li>`;
+  chatbox.appendChild(newItem);
+
+
+        fetch(`http://127.0.0.1:8000/chat/${send_input}`)
+        .then(response => {
+  if (!response.ok) {
+    throw new Error('Network response was not ok');
+  }
+  return response.json();
+})
+.then(data => {
+  let res = data["message"];
+  res = res.split('')
+  const newItem = document.createElement('div');
+  newItem.classList.add("message")
+  newItem.classList.add("bot-message")
+  let len = res?.length;
+  let counter = 0;
+  let li = document.createElement("li");
+  newItem.append(li)
+  chatbox.appendChild(newItem);
+  send_btn.innerHTML = 'Send'
+  const set = setInterval(()=>{
+    function getChar(t){
+        if(t === " "){
+            return " "
+        }else{return t}
+    }
+    if(res[counter] === " "){
+        li.innerHTML = li.innerHTML + " "
+    }
+    li.innerHTML = li.innerHTML + getChar(res[counter])
+    if(counter < len){
+        counter = counter + 1;
+    }
+    if(counter === len){
+        clearInterval(set)
+    }
+  }, 70)
+  document.querySelector("#user_msg").value ="";
+  
+})
+.catch(error => {
+  console.error('There was an error:', error);
+});
+        
+   });
+
+   
+</script>
+</body>
+</html>
